@@ -237,6 +237,42 @@ class TestThumbsUp < Test::Unit::TestCase
     end
   end
 
+  def test_plusminus_tally_up
+    user = User.create(:name => 'david')
+    item1 = Item.create(:name => 'XBOX', :description => 'XBOX console')
+    item2 = Item.create(:name => 'Playstation', :description => 'Playstation console')
+    item3 = Item.create(:name => 'Wii', :description => 'Wii console')
+
+    assert_not_nil user.vote_for(item1)
+    assert_not_nil user.vote_against(item2)
+
+    assert_equal [1, 0, 0], Item.plusminus_tally(:separate_updown => true).map(&:up).map(&:to_i)
+  end
+
+  def test_plusminus_tally_down
+    user = User.create(:name => 'david')
+    item1 = Item.create(:name => 'XBOX', :description => 'XBOX console')
+    item2 = Item.create(:name => 'Playstation', :description => 'Playstation console')
+    item3 = Item.create(:name => 'Wii', :description => 'Wii console')
+
+    assert_not_nil user.vote_for(item1)
+    assert_not_nil user.vote_against(item2)
+
+    assert_equal [0, 0, 1], Item.plusminus_tally(:separate_updown => true).map(&:down).map(&:to_i)
+  end
+
+  def test_plusminus_tally_vote_count
+    user = User.create(:name => 'david')
+    item1 = Item.create(:name => 'XBOX', :description => 'XBOX console')
+    item2 = Item.create(:name => 'Playstation', :description => 'Playstation console')
+    item3 = Item.create(:name => 'Wii', :description => 'Wii console')
+
+    assert_not_nil user.vote_for(item1)
+    assert_not_nil user.vote_against(item2)
+
+    assert_equal [1, 0, -1], Item.plusminus_tally.map(&:plusminus_tally).map(&:to_i)
+  end
+
   def test_plusminus_tally_voting_for
     user1 = User.create(:name => 'david')
     item = Item.create(:name => 'Playstation', :description => 'Playstation console')
