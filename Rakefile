@@ -24,10 +24,18 @@ end
 task :build do
   system "gem build thumbs_up.gemspec"
 end
- 
+
 task :release => :build do
   system "gem push thumbs_up-#{ThumbsUp::VERSION}.gem"
   system "rm thumbs_up-#{ThumbsUp::VERSION}.gem"
 end
 
-task :default => :test
+task :test_both_databases do
+  # Test both MySQL and Postgres.
+  ENV['DB'] = 'mysql'
+  Rake::Task['test'].execute
+  ENV['DB'] = 'postgres'
+  Rake::Task['test'].execute
+end
+
+task :default => :test_both_databases

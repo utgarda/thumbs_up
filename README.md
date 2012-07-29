@@ -80,7 +80,7 @@ Did the first user vote for the Car with id = 2 already?
     u = User.first
     u.vote_for(Car.find(2))
     u.voted_on?(Car.find(2)) #=> true
-	
+
 Did the first user vote for or against the Car with id = 2?
 
     u = User.first
@@ -91,6 +91,10 @@ Did the first user vote for or against the Car with id = 2?
 #### Tallying Votes
 
 You can easily retrieve voteable object collections based on the properties of their votes:
+
+    @items = Item.tally.limit(10).where('created_at > ?', 2.days.ago).having('COUNT(votes.id) < 10')
+
+Or for MySQL:
 
     @items = Item.tally.limit(10).where('created_at > ?', 2.days.ago).having('vote_count < 10')
 

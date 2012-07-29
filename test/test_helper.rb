@@ -7,26 +7,47 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'active_record'
 
-if ENV['TRAVIS']
-  config = {
-    :adapter => 'mysql2',
-    :database => 'thumbs_up_test',
-    :username => 'root'
-  }
-else
-  config = {
-    :adapter => 'mysql2',
-    :database => 'thumbs_up_test',
-    :username => 'test',
-    :password => 'test',
-    :socket => '/tmp/mysql.sock'
-  }
-end
+if ENV['DB'] == 'mysql'
+  if ENV['TRAVIS']
+    config = {
+      :adapter => 'mysql2',
+      :database => 'thumbs_up_test',
+      :username => 'root'
+    }
+  else
+    config = {
+      :adapter => 'mysql2',
+      :database => 'thumbs_up_test',
+      :username => 'test',
+      :password => 'test',
+      :socket => '/tmp/mysql.sock'
+    }
+  end
 
-ActiveRecord::Base.establish_connection(config)
-ActiveRecord::Base.connection.drop_database config[:database] rescue nil
-ActiveRecord::Base.connection.create_database config[:database]
-ActiveRecord::Base.establish_connection(config)
+  ActiveRecord::Base.establish_connection(config)
+  ActiveRecord::Base.connection.drop_database config[:database] rescue nil
+  ActiveRecord::Base.connection.create_database config[:database]
+  ActiveRecord::Base.establish_connection(config)
+else
+  if ENV['TRAVIS']
+    config = {
+      :adapter => 'postgresql',
+      :database => 'thumbs_up_test',
+      :username => 'root'
+    }
+  else
+    config = {
+      :adapter => 'postgresql',
+      :database => 'thumbs_up_test',
+      :username => 'test'
+    }
+  end
+
+  ActiveRecord::Base.establish_connection(config.merge({ :database => 'postgres' }))
+  ActiveRecord::Base.connection.drop_database config[:database]
+  ActiveRecord::Base.connection.create_database config[:database]
+  ActiveRecord::Base.establish_connection(config)
+end
 
 ActiveRecord::Migration.verbose = false
 
@@ -41,14 +62,14 @@ ActiveRecord::Schema.define do
   add_index :votes, [:voter_id, :voter_type]
   add_index :votes, [:voteable_id, :voteable_type]
 
-  # Comment out the line below to allow multiple votes per voter on a single entity.  
+  # Comment out the line below to allow multiple votes per voter on a single entity.
   add_index :votes, [:voter_id, :voter_type, :voteable_id, :voteable_type], :unique => true, :name => 'fk_one_vote_per_user_per_entity'
-  
+
   create_table :users, :force => true do |t|
     t.string :name
     t.timestamps
   end
-  
+
   create_table :items, :force => true do |t|
     t.integer :user_id
     t.string  :name

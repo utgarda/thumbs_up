@@ -2,6 +2,7 @@ module ThumbsUp
   module ActsAsVoteable #:nodoc:
 
     def self.included(base)
+      base.extend ThumbsUp::Base
       base.extend ClassMethods
     end
 
@@ -15,7 +16,7 @@ module ThumbsUp
     end
 
     module SingletonMethods
-      
+
       # Calculate the plusminus for a group of voteables in one database query.
       # This returns an Arel relation, so you can add conditions as you like chained on to
       # this method call.
@@ -27,10 +28,10 @@ module ThumbsUp
         t = t.order("plusminus_tally DESC")
         t = t.group("#{self.table_name}.id")
         t = t.select("#{self.table_name}.*")
-        t = t.select("SUM(CASE CAST(#{Vote.table_name}.vote AS UNSIGNED) WHEN 1 THEN 1 WHEN 0 THEN -1 ELSE 0 END) AS plusminus_tally")
+        t = t.select("SUM(CASE WHEN #{Vote.table_name}.vote THEN 1 ELSE -1 END) AS plusminus_tally")
         if params[:separate_updown]
-          t = t.select("SUM(CASE CAST(#{Vote.table_name}.vote AS UNSIGNED) WHEN 1 THEN 1 WHEN 0 THEN 0 ELSE 0 END) AS up")
-          t = t.select("SUM(CASE CAST(#{Vote.table_name}.vote AS UNSIGNED) WHEN 1 THEN 0 WHEN 0 THEN 1 ELSE 0 END) AS down")
+          t = t.select("SUM(CASE WHEN #{Vote.table_name}.vote THEN 1 ELSE 0 END) AS up")
+          t = t.select("SUM(CASE WHEN #{Vote.table_name}.vote THEN 0 ELSE 1 END) AS down")
         end
         t = t.select("COUNT(#{Vote.table_name}.id) AS vote_count")
       end

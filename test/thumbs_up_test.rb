@@ -24,6 +24,8 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_equal 0, user_for.vote_count(:down)
     assert_equal true, user_for.voted_which_way?(item, :up)
     assert_equal false, user_for.voted_which_way?(item, :down)
+    assert_equal 1, user_for.votes.where(:voteable_type => 'Item').count
+    assert_equal 0, user_for.votes.where(:voteable_type => 'AnotherItem').count
     assert_raises(ArgumentError) do
       user_for.voted_which_way?(item, :foo)
     end
@@ -226,8 +228,13 @@ class TestThumbsUp < Test::Unit::TestCase
 
     assert_not_nil user.vote_for(item)
 
-    assert (Item.plusminus_tally.having('vote_count > 0').include? item)
-    assert (not Item.plusminus_tally.having('vote_count > 0').include? item_not_included)
+    if ActiveRecord::Base.connection.adapter_name == 'MySQL'
+      assert (Item.plusminus_tally.having('vote_count > 0').include? item)
+      assert (not Item.plusminus_tally.having('vote_count > 0').include? item_not_included)
+    else
+      assert (Item.plusminus_tally.having('COUNT(votes.id) > 0').include? item)
+      assert (not Item.plusminus_tally.having('COUNT(votes.id) > 0').include? item_not_included)
+    end
   end
 
   def test_plusminus_tally_voting_for
@@ -236,8 +243,9 @@ class TestThumbsUp < Test::Unit::TestCase
 
     assert_not_nil user1.vote_for(item)
 
-    assert_equal 1, Item.plusminus_tally[0].vote_count
-    assert_equal 1, Item.plusminus_tally[0].plusminus
+    # https://github.com/rails/rails/issues/1718
+    assert_equal 1, Item.plusminus_tally[0].vote_count.to_i
+    assert_equal 1, Item.plusminus_tally[0].plusminus.to_i
   end
 
   def test_plusminus_tally_voting_against
@@ -248,8 +256,9 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_not_nil user1.vote_against(item)
     assert_not_nil user2.vote_against(item)
 
-    assert_equal 2, Item.plusminus_tally[0].vote_count
-    assert_equal -2, Item.plusminus_tally[0].plusminus
+    # https://github.com/rails/rails/issues/1718
+    assert_equal 2, Item.plusminus_tally[0].vote_count.to_i
+    assert_equal -2, Item.plusminus_tally[0].plusminus.to_i
   end
 
   def test_plusminus_tally_default_ordering
@@ -268,7 +277,7 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_equal item_for, Item.plusminus_tally[1]
     assert_equal item_against, Item.plusminus_tally[2]
   end
-  
+
   def test_plusminus_tally_limit
     users = (0..9).map{ |u| User.create(:name => "User #{u}") }
     items = (0..9).map{ |u| Item.create(:name => "Item #{u}", :description => "Item #{u}") }
@@ -305,7 +314,7 @@ class TestThumbsUp < Test::Unit::TestCase
     users = (0..1).map{ |u| User.create(:name => "User #{u}") }
     items = (0..1).map{ |u| users[0].items.create(:name => "Item #{u}", :description => "Item #{u}") }
     users.each{ |u| items.each { |i| u.vote_for(i) } }
-    
+
     assert_equal 4, users[0].karma
     assert_equal 0, users[1].karma
   end
