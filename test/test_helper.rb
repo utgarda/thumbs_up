@@ -33,7 +33,7 @@ else
     config = {
       :adapter => 'postgresql',
       :database => 'thumbs_up_test',
-      :username => 'root'
+      :username => 'postgres'
     }
   else
     config = {
