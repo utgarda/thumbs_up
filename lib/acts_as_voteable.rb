@@ -15,7 +15,7 @@ module ThumbsUp
     end
 
     module SingletonMethods
-      
+
       # Calculate the plusminus for a group of voteables in one database query.
       # This returns an Arel relation, so you can add conditions as you like chained on to
       # this method call.
@@ -23,7 +23,7 @@ module ThumbsUp
       # You can also have the upvotes and downvotes returned separately in the same query:
       # Post.plusminus_tally(:separate_updown => true)
       def plusminus_tally(params = {})
-        t = self.joins("LEFT OUTER JOIN #{Vote.table_name} ON #{self.table_name}.id = #{Vote.table_name}.voteable_id")
+        t = self.joins("LEFT OUTER JOIN #{Vote.table_name} ON #{self.table_name}.id = #{Vote.table_name}.voteable_id AND #{Vote.table_name}.voteable_type = '#{self.name}'")
         t = t.order("plusminus_tally DESC")
         t = t.group("#{self.table_name}.id")
         t = t.select("#{self.table_name}.*")
