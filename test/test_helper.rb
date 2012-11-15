@@ -7,14 +7,13 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'active_record'
 
-if ENV['DB'] == 'mysql'
-  if ENV['TRAVIS']
-    config = {
-      :adapter => 'mysql2',
-      :database => 'thumbs_up_test',
-      :username => 'root'
-    }
-  else
+config = {
+  :database => 'thumbs_up_test',
+  :username => 'test'
+}
+
+case ENV['DB']
+  when 'mysql'
     config = {
       :adapter => 'mysql2',
       :database => 'thumbs_up_test',
@@ -22,32 +21,42 @@ if ENV['DB'] == 'mysql'
       :password => 'test',
       :socket => '/tmp/mysql.sock'
     }
-  end
-
-  ActiveRecord::Base.establish_connection(config)
-  ActiveRecord::Base.connection.drop_database config[:database] rescue nil
-  ActiveRecord::Base.connection.create_database config[:database]
-  ActiveRecord::Base.establish_connection(config)
-else
-  if ENV['TRAVIS']
+    if ENV['TRAVIS']
+      config = {
+        :adapter => 'mysql2',
+        :database => 'thumbs_up_test',
+        :username => 'test',
+        :password => 'test'
+      }
+    end
+    ActiveRecord::Base.establish_connection(config)
+    ActiveRecord::Base.connection.drop_database(config[:database]) rescue nil
+    ActiveRecord::Base.connection.create_database(config[:database])
+  when 'postgres'
     config = {
       :adapter => 'postgresql',
       :database => 'thumbs_up_test',
-      :username => 'postgres'
+      :username => 'test',
     }
-  else
+    if ENV['TRAVIS']
+      config = {
+        :adapter => 'postgresql',
+        :database => 'thumbs_up_test',
+        :username => 'postgres',
+      }
+    end
+    ActiveRecord::Base.establish_connection(config.merge({ :database => 'postgres' }))
+    ActiveRecord::Base.connection.drop_database(config[:database])
+    ActiveRecord::Base.connection.create_database(config[:database])
+  when 'sqlite3'
     config = {
-      :adapter => 'postgresql',
-      :database => 'thumbs_up_test',
-      :username => 'test'
+      :adapter => 'sqlite3',
+      :database => 'test.sqlite3',
+      :username => 'test',
     }
-  end
-
-  ActiveRecord::Base.establish_connection(config.merge({ :database => 'postgres' }))
-  ActiveRecord::Base.connection.drop_database config[:database]
-  ActiveRecord::Base.connection.create_database config[:database]
-  ActiveRecord::Base.establish_connection(config)
 end
+
+ActiveRecord::Base.establish_connection(config)
 
 ActiveRecord::Migration.verbose = false
 
