@@ -19,8 +19,12 @@ drop_and_create_database = true
 case ENV['DB']
   when 'mysql'
     config.update({ :adapter => 'mysql2' })
-    config[:username] = 'root' if ENV['TRAVIS']
-    config[:socket] = '/tmp/mysql.sock' if !ENV['TRAVIS']
+    if ENV['TRAVIS']
+      config[:username] = 'root'
+      config.delete(:password)
+    else
+      config[:socket] = '/tmp/mysql.sock' if !ENV['TRAVIS']
+    end
   when 'postgres'
     config.update({:adapter => 'postgresql'})
     config[:username] = 'postgres' if ENV['TRAVIS']
