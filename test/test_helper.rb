@@ -14,6 +14,7 @@ config = {
 }
 
 connect_database = config[:database]
+drop_and_create_database = true
 
 case ENV['DB']
   when 'mysql'
@@ -25,12 +26,16 @@ case ENV['DB']
     config[:username] = 'postgres' if ENV['TRAVIS']
     connect_database = 'postgres'
   else
-    config.update({:adapter => 'sqlite3', :database => 'db/test.sqlite3'})
+    config.update({:adapter => 'sqlite3', :database => 'test.sqlite3'})
+    drop_and_create_database = false
 end
 
-ActiveRecord::Base.establish_connection(config.merge({:database => connect_database}))
-ActiveRecord::Base.connection.drop_database config[:database]
-ActiveRecord::Base.connection.create_database config[:database]
+if drop_and_create_database
+  ActiveRecord::Base.establish_connection(config.merge({:database => connect_database}))
+  ActiveRecord::Base.connection.drop_database config[:database]
+  ActiveRecord::Base.connection.create_database config[:database]
+end
+
 ActiveRecord::Base.establish_connection(config)
 
 ActiveRecord::Migration.verbose = false
