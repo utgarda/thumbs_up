@@ -7,47 +7,31 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'active_record'
 
-if ENV['DB'] == 'mysql'
-  if ENV['TRAVIS']
-    config = {
-      :adapter => 'mysql2',
-      :database => 'thumbs_up_test',
-      :username => 'root'
-    }
-  else
-    config = {
-      :adapter => 'mysql2',
-      :database => 'thumbs_up_test',
-      :username => 'test',
-      :password => 'test',
-      :socket => '/tmp/mysql.sock'
-    }
-  end
+config = {
+  :database => 'thumbs_up_test',
+  :username => 'test',
+  :password => 'test'
+}
 
-  ActiveRecord::Base.establish_connection(config)
-  ActiveRecord::Base.connection.drop_database config[:database] rescue nil
-  ActiveRecord::Base.connection.create_database config[:database]
-  ActiveRecord::Base.establish_connection(config)
-else
-  if ENV['TRAVIS']
-    config = {
-      :adapter => 'postgresql',
-      :database => 'thumbs_up_test',
-      :username => 'postgres'
-    }
-  else
-    config = {
-      :adapter => 'postgresql',
-      :database => 'thumbs_up_test',
-      :username => 'test'
-    }
-  end
+connect_database = config[:database]
 
-  ActiveRecord::Base.establish_connection(config.merge({ :database => 'postgres' }))
-  ActiveRecord::Base.connection.drop_database config[:database]
-  ActiveRecord::Base.connection.create_database config[:database]
-  ActiveRecord::Base.establish_connection(config)
+case ENV['DB']
+  when 'mysql'
+    config.update({ :adapter => 'mysql2' })
+    config[:username] = 'root' if ENV['TRAVIS']
+    config[:socket] = '/tmp/mysql.sock' if !ENV['TRAVIS']
+  when 'postgres'
+    config.update({:adapter => 'postgresql'})
+    config[:username] = 'postgres' if ENV['TRAVIS']
+    connect_database = 'postgres'
+  else
+    config.update({:adapter => 'sqlite3', :database => 'db/test.sqlite3'})
 end
+
+ActiveRecord::Base.establish_connection(config.merge({:database => connect_database}))
+ActiveRecord::Base.connection.drop_database config[:database]
+ActiveRecord::Base.connection.create_database config[:database]
+ActiveRecord::Base.establish_connection(config)
 
 ActiveRecord::Migration.verbose = false
 
