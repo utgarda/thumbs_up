@@ -25,8 +25,7 @@ case ENV['DB']
       config = {
         :adapter => 'mysql2',
         :database => 'thumbs_up_test',
-        :username => 'test',
-        :password => 'test'
+        :username => 'test'
       }
     end
     ActiveRecord::Base.establish_connection(config)
