@@ -64,13 +64,22 @@ class TestThumbsUp < Test::Unit::TestCase
   end
 
   def test_acts_as_voteable_instance_methods
+    item = Item.create(:name => 'XBOX', :description => 'XBOX console')
+
+    assert_equal 0, item.ci_plusminus
+
     user_for = User.create(:name => 'david')
     another_user_for = User.create(:name => 'name')
     user_against = User.create(:name => 'brady')
-    item = Item.create(:name => 'XBOX', :description => 'XBOX console')
 
     user_for.vote_for(item)
     another_user_for.vote_for(item)
+
+    # Use #reload to force reloading of votes from the database,
+    # otherwise these tests fail after "assert_equal 0, item.ci_plusminus" caches
+    # the votes. We hack this as caching is the correct behavious, per-request,
+    # in production.
+    item.reload
 
     assert_equal 2, item.votes_for
     assert_equal 0, item.votes_against

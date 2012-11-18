@@ -19,11 +19,11 @@ module ThumbsUp #:nodoc:
 
     module SingletonMethods
 
-      ## Not yet implemented. Don't use it!
+      # Not yet implemented. Don't use it!
       # Find the most popular users
-      def find_most_karmic
-        self.all
-      end
+      # def find_most_karmic
+      #   self.all
+      # end
 
     end
 
