@@ -343,6 +343,18 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_equal item_against, Item.plusminus_tally.reorder('plusminus_tally ASC')[0]
   end
 
+  def test_plusminus_tally_limit_with_where_and_having
+    users = (0..9).map{ |u| User.create(:name => "User #{u}") }
+    items = (0..9).map{ |u| Item.create(:name => "Item #{u}", :description => "Item #{u}") }
+    users.each{ |u| items[0..8].each { |i| u.vote_for(i) } }
+
+    # Postgresql doesn't accept aliases in HAVING clauses, so you'll need to copy and paste the whole statement from the #plusminus_tally method if you want to use HAVING('plusminus_tally > 10'), for example.
+    assert_equal 0, Item.plusminus_tally.limit(5).where('created_at > ?', 2.days.ago).having("SUM(CASE #{Vote.table_name}.vote WHEN #{ActiveRecord::Base.connection.quoted_true} THEN 1 WHEN #{ActiveRecord::Base.connection.quoted_false} THEN -1 ELSE 0 END) > 10").length
+    assert_equal 5, Item.plusminus_tally.limit(5).where('created_at > ?', 2.days.ago).having("SUM(CASE #{Vote.table_name}.vote WHEN #{ActiveRecord::Base.connection.quoted_true} THEN 1 WHEN #{ActiveRecord::Base.connection.quoted_false} THEN -1 ELSE 0 END) > 9").length
+    assert_equal 9, Item.plusminus_tally.limit(10).where('created_at > ?', 2.days.ago).having("SUM(CASE #{Vote.table_name}.vote WHEN #{ActiveRecord::Base.connection.quoted_true} THEN 1 WHEN #{ActiveRecord::Base.connection.quoted_false} THEN -1 ELSE 0 END) > 9").length
+    assert_equal 0, Item.plusminus_tally.limit(10).where('created_at > ?', 1.day.from_now).having("SUM(CASE #{Vote.table_name}.vote WHEN #{ActiveRecord::Base.connection.quoted_true} THEN 1 WHEN #{ActiveRecord::Base.connection.quoted_false} THEN -1 ELSE 0 END) > 9").length
+  end
+
   def test_plusminus_tally_count
     Item.plusminus_tally.except(:order).count
   end
