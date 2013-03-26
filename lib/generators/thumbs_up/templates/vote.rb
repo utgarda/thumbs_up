@@ -14,4 +14,8 @@ class Vote < ActiveRecord::Base
   # Comment out the line below to allow multiple votes per user.
   validates_uniqueness_of :voteable_id, :scope => [:voteable_type, :voter_type, :voter_id]
 <% end %>
+<% if options[:with_voting_tag] == true %>
+  # Comment out the line below to allow multiple votes per user.
+  attr_accessble :voteable_tag
+<% end %>
 end

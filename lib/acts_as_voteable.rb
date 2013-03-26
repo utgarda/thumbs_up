@@ -65,20 +65,27 @@ module ThumbsUp
     module InstanceMethods
 
       # wraps the dynamic, configured, relationship name
-      def _votes_by
-        self.send(ThumbsUp.configuration[:voteable_relationship_name])
+      def _votes_by(tag = nil)
+        if tag
+          self.send(ThumbsUp.configuration[:voteable_relationship_name])
+        else
+          self.send(ThumbsUp.configuration[:voteable_relationship_name]).where(voteable_tag: tag)
+        end
       end
 
-      def votes_for
-        self._votes_by.where(:vote => true).count
+      def votes_for(tag = nil)
+        self._votes_by(tag).where(:vote => true).count
       end
 
-      def votes_against
-        self._votes_by.where(:vote => false).count
+      def votes_against(tag = nil)
+        self._votes_by(tag).where(:vote => false).count
       end
 
-      def percent_for
-        (votes_for.to_f * 100 / (self._votes_by.size + 0.0001)).round
+      def percent_for(tag)
+        (votes_for(tag).to_f * 100 / (self._votes_by(tag) + 0.0001)).round
+      end
+      def tag_percent_for(tag)
+        (votes_for(tag).to_f * 100 / (self._votes_by(tag) + 0.0001)).round
       end
 
       def percent_against
@@ -91,6 +98,9 @@ module ThumbsUp
       # method above.
       def plusminus
         respond_to?(:plusminus_tally) ? plusminus_tally : (votes_for - votes_against)
+      end
+      def tag_plusminus(tag)
+        tag_votes_for - votes_against
       end
 
       # The lower bound of a Wilson Score with a default confidence interval of 95%. Gives a more accurate representation of average rating (plusminus) based on the number of positive ratings and total ratings.
