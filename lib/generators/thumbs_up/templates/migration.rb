@@ -6,7 +6,7 @@ class ThumbsUpMigration < ActiveRecord::Migration
       t.references :voteable, :polymorphic => true, :null => false
       t.references :voter,    :polymorphic => true
 <% if options[:with_voting_tag] == true %>
-      t.references :voteable_tag,    :polymorphic => true
+      t.string :voteable_tag,    :polymorphic => true
 <% end %>
         t.timestamps
 
