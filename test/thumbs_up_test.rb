@@ -52,10 +52,20 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_equal false, user_against.voted_which_way?(item, :up, 'test_tag')
     assert_equal true, user_against.voted_which_way?(item, :down, 'test_tag')
 
+    assert_not_nil user_against.vote_exclusively_for(item, 'test_tag')
+    assert_equal true, user_against.voted_for?(item, 'test_tag')
+
+    assert_not_nil user_against.vote_exclusively_for(item, 'test')
+    assert_equal true, user_against.voted_for?(item, 'test')
+    assert_equal true, user_against.voted_for?(item, 'test_tag')
+
+    assert_not_nil user_for.vote_exclusively_against(item, 'test_tag')
+    assert_equal true, user_for.voted_against?(item, 'test_tag')
+
     user_for.unvote_for(item)
     assert_equal 0, user_for.vote_count
 
-    user_against.unvote_for(item, 'test_tag')
+    user_against.unvote_for(item)
     assert_equal 0, user_against.vote_count
   end
 
