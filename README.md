@@ -138,6 +138,20 @@ You can also use `--unique-voting false` when running the generator command:
 
     rails generate thumbs_up --unique-voting false
 
+#### In the migration
+
+    t.string :voteable_tag
+
+and indexes:
+
+    add_index :votes, [:voteable_id, :voteable_type, :voteable_tag]
+(for unique voting)
+    add_index :votes, [:voter_id, :voter_type, :voteable_id, :voteable_type, :voteable_tag], :unique => true, :name => 'fk_one_vote_per_user_per_entity'
+
+You can use `--with_voting_tag`:
+
+    rails generate thumbs_up --with_voting_tag true
+
 #### Testing ThumbsUp
 
 Testing is a bit more than trivial now as our #tally and #plusminus_tally queries don't function properly under SQLite. To set up for testing:
